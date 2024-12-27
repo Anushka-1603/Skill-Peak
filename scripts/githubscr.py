@@ -97,7 +97,7 @@ def save_to_database(performers, db_path):
     conn.close()
     
 input_file = '../inputs/githubinp.txt'
-db_path = '../outputs/github_stats.db'
+db_path = '../outputs/stats.db'
 
 usernames = load_usernames(input_file)
 top_coders = get_top_performers(usernames)
