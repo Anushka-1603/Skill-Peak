@@ -2,6 +2,7 @@ import requests
 import datetime
 import json
 import os
+import sqlite3
 
 # Loading usernames
 def load_usernames(input_file):
@@ -70,12 +71,41 @@ def get_top_performers(usernames):
     performers.sort(key=lambda x: x['contributions'], reverse=True)
     return performers[:3]
 
+# Save results to SQLite database
+def save_to_database(performers, db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
+    # Create table if it doesn't exist
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS github_stats (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT NOT NULL,
+        contributions INTEGER NOT NULL
+    )
+    ''')
+
+    # Clear old data
+    cursor.execute('DELETE FROM github_stats')
+
+    # Insert new data
+    for performer in performers:
+        cursor.execute('INSERT INTO github_stats (username, contributions) VALUES (?, ?)', 
+                       (performer['username'], performer['contributions']))
+
+    conn.commit()
+    conn.close()
+    
 input_file = '../inputs/githubinp.txt'
+db_path = '../outputs/github_stats.db'
 
 usernames = load_usernames(input_file)
 top_coders = get_top_performers(usernames)
 
+# Save the results to the SQLite database
+os.makedirs(os.path.dirname(db_path), exist_ok=True)
+save_to_database(top_coders, db_path)
+
 print("Top performers:")
 for coder in top_coders:
-    print(f"{performer['username']}: {performer['contributions']} contributions")
+    print(f"{coder['username']}: {coder['contributions']} contributions")
