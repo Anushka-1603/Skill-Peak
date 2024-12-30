@@ -2,11 +2,14 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import sqlite3
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 SMTP_SERVER = "smtp.gmail.com"  # For Gmail
 SMTP_PORT = 587
 EMAIL_ADDRESS = "singhanushka1603@gmail.com"  
-EMAIL_PASSWORD = "REDACTED" 
+EMAIL_PASSWORD = os.getenv('EMAIL_PASSWORD')
 
 def compose_email(github_data, leetcode_data):
     """Compose the email with top performers."""
