@@ -84,7 +84,7 @@ def save_to_database(performers, db_path):
     conn.commit()
     conn.close()
     
-input_file = '../inputs/leetcodeinp.txt'
+input_file = '/Users/anushkasingh/Desktop/Code/webD/repos/Skill-Peak/inputs/leetcodeinp.txt'
 db_path = '../outputs/stats.db'
 
 usernames = load_usernames(input_file)
