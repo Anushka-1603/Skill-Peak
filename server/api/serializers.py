@@ -11,7 +11,7 @@ class UserHandlerSerializer(serializers.ModelSerializer):
         model = UserHandler
         fields = '__all__'
         
-class UserHandlerSerializer(serializers.ModelSerializer):
+class IndividualStatsSerializer(serializers.ModelSerializer):
     class Meta:
         model = IndividualStats
         fields = '__all__'
