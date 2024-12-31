@@ -14,8 +14,8 @@ class UserProfileListCreateAPIView(generics.ListCreateAPIView):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
     
-class UserHandlerDetailAPIView(generics.RetrieveAPIView):
-    """ Get details of a single user handler """
+class UserHandlerDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
+    """ Get, add, or delete details of a single user handler """
     queryset = UserHandler.objects.all()
     serializer_class = UserHandlerSerializer
     lookup_field = 'pk'
