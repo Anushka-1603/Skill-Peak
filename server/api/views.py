@@ -13,3 +13,14 @@ class UserProfileListCreateAPIView(generics.ListCreateAPIView):
     """ Get list of all users or create a new user """
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
+    
+class UserHandlerDetailAPIView(generics.RetrieveAPIView):
+    """ Get details of a single user handler """
+    queryset = UserHandler.objects.all()
+    serializer_class = UserHandlerSerializer
+    lookup_field = 'pk'
+
+class UserHandlerListCreateAPIView(generics.ListCreateAPIView):
+    """ Get list of all user handlers or create a new user handler """
+    queryset = UserHandler.objects.all()
+    serializer_class = UserHandlerSerializer
