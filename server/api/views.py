@@ -15,28 +15,32 @@ class UserProfileListCreateAPIView(generics.ListCreateAPIView):
     queryset = UserProfile.objects.all()
     serializer_class = UserProfileSerializer
     
-class UserHandlerDetailAPIView(generics.RetrieveUpdateDestroyAPIView):
-    """ Get, add, or delete details of a single user handler """
+class UserHandlerDetailAPIView(generics.RetrieveAPIView, generics.DestroyAPIView):
+    """ Get or delete details of a single user handler """
     queryset = UserHandler.objects.all()
     serializer_class = UserHandlerSerializer
     lookup_field = 'pk'
 
 class UserHandlerListCreateAPIView(generics.ListCreateAPIView):
     """ Get list of all user handlers or create a new user handler """
-    # queryset = UserHandler.objects.all()
+    queryset = UserHandler.objects.all()
     serializer_class = UserHandlerSerializer
-    permission_classes = [IsAuthenticated]
+    # permission_classes = [IsAuthenticated]
     
-    def get_queryset(self):
-        # a logged in user can view only the user handlers he has added
-        user_profile = UserProfile.objects.get(email=self.request.user.email)
-        return UserHandler.objects.filter(user=user_profile)
+    # def get_queryset(self):
+    #     # a logged in user can view only the user handlers he has added
+    #     print(self.request.user.email)
+    #     user_profile = UserProfile.objects.get(email=self.request.user.email)
+    #     # print(user_profile)
+    #     res = UserHandler.objects.filter(user=user_profile)
+    #     # print(res)
+    #     return res
     
-    def perform_create(self, serializer):
-        # Automatically associate the handler with the logged-in user's profile
-        user_profile = UserProfile.objects.get(email=self.request.user.email)
-        serializer.save(user=user_profile)
-    
+    # def perform_create(self, serializer):
+    #     # Automatically associate the handler with the logged-in user's profile
+    #     user_profile = UserProfile.objects.get(email=self.request.user.email)
+    #     serializer.save(user=user_profile)
+
 class IndividualStatsRetrieveAPIView(generics.RetrieveAPIView):
     """ Get stats associated with a single user handler """
     queryset = IndividualStats.objects.all()
