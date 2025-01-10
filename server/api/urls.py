@@ -12,4 +12,7 @@ urlpatterns = [
     
     # get individual stats endpoint
     path('users/userhandlers/stats/<int:pk>/', views.IndividualStatsRetrieveAPIView.as_view()),
+    
+    # update stats endpoint
+    path('users/userhandlers/update-stats/', views.UpdateStatsAPIView.as_view()),
 ]
