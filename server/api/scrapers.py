@@ -63,7 +63,7 @@ def scrape_github(handlerid):
         }
         }
         """,
-        "variables": {"username": username}
+        "variables": {"username": handlerid}
     }
     
     response = requests.post(url, json=query, headers=headers)
