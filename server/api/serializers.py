@@ -7,7 +7,6 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class UserHandlerSerializer(serializers.ModelSerializer):
-    user = serializers.CharField(source='user.name')
     class Meta:
         model = UserHandler
         fields = '__all__'
