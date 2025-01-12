@@ -84,8 +84,8 @@ def save_to_database(performers, db_path):
     conn.commit()
     conn.close()
     
-input_file = '../inputs/leetcodeinp.txt'
-db_path = '../outputs/stats.db'
+input_file = 'inputs/githubinp.txt'
+db_path = 'outputs/stats.db'
 
 usernames = load_usernames(input_file)
 top_performers = get_top_performers(usernames)
