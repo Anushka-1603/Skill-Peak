@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 
 # scraper for leetcode
-def scrape_leetcode(handlerid):
+def scrape_leetcode(handlerid,days):
     url = 'https://leetcode.com/graphql'
     headers = {"Content-Type": "application/json"}
     query = {
@@ -31,7 +31,7 @@ def scrape_leetcode(handlerid):
     # get submissions made in the last week
     submissionCalendar = data.get('data', {}).get('matchedUser', {}).get('submissionCalendar', {})
     recentSubmissions = json.loads(submissionCalendar)
-    week_ago = datetime.datetime.now() - datetime.timedelta(days=7)
+    week_ago = datetime.datetime.now() - datetime.timedelta(days=days)
     
     tot_submissions = 0
     for timestamp, count in recentSubmissions.items():
@@ -41,7 +41,7 @@ def scrape_leetcode(handlerid):
     return tot_submissions
 
 # scraper for github
-def scrape_github(handlerid):
+def scrape_github(handlerid,days):
     load_dotenv()
     PAT = os.getenv('PAT')
     url = "https://api.github.com/graphql" # graphQL api endpoint
@@ -75,10 +75,10 @@ def scrape_github(handlerid):
     
     data = response.json()
     
-    week_ago = datetime.datetime.now() - datetime.timedelta(days=7)
+    week_ago = datetime.datetime.now() - datetime.timedelta(days=days)
     contributions = 0
 
-    weeks = data.get('data', {}).get('user', {}).get('contributionsCollection', {}).get('contributionCalendar', {}).get('weeks', [])
+    weeks = dadta.get('data', {}).get('user', {}).get('contributionsCollection', {}).get('contributionCalendar', {}).get('weeks', [])
     for week in weeks:
         for day in week['contributionDays']:
             day_date = datetime.datetime.strptime(day['date'], "%Y-%m-%d")
