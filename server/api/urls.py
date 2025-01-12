@@ -3,16 +3,17 @@ from . import views
 
 urlpatterns = [
     # user profile endpoints
-    path('users/', views.UserProfileListCreateAPIView.as_view()),
-    path('users/<int:pk>/', views.UserProfileDetailAPIView.as_view()),
+    path('', views.UserProfileListCreateAPIView.as_view()),
+    path('<int:pk>/', views.UserProfileDetailAPIView.as_view()),
     
     # user handler endpoints
-    path('users/userhandlers/', views.UserHandlerListCreateAPIView.as_view()),
-    path('users/userhandlers/<int:pk>/', views.UserHandlerDetailAPIView.as_view()),
+    path('userhandlers/', views.UserHandlerListCreateAPIView.as_view()),
+    path('userhandlers/<int:pk>/', views.UserHandlerDetailAPIView.as_view()),
+        
+    path('userhandlers/viewhandler/', views.IndividualStatsRetrieveAPIView.as_view()),
     
-    # get individual stats endpoint
-    path('users/userhandlers/stats/<int:pk>/', views.IndividualStatsRetrieveAPIView.as_view()),
+    path('user/userhandlers/<int:user_id>', views.UserHandlerofUserAPIView.as_view()),
     
     # update stats endpoint
-    path('users/userhandlers/update-stats/', views.UpdateStatsAPIView.as_view()),
+    path('userhandlers/update-stats/', views.UpdateStatsAPIView.as_view()),
 ]
