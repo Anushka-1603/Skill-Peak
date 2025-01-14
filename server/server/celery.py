@@ -16,4 +16,8 @@ app.conf.beat_schedule = {
         'task': 'api.tasks.update_stats',
         'schedule': crontab(hour=0, minute=0, day_of_week=6),
     },
+    'send-weekly-mail': {
+        'task': 'api.tasks.send_weekly_email',
+        'schedule': crontab(hour=0, minute=0, day_of_week=6),
+    }
 }  
