@@ -78,7 +78,7 @@ def scrape_github(handlerid,days):
     week_ago = datetime.datetime.now() - datetime.timedelta(days=days)
     contributions = 0
 
-    weeks = dadta.get('data', {}).get('user', {}).get('contributionsCollection', {}).get('contributionCalendar', {}).get('weeks', [])
+    weeks = data.get('data', {}).get('user', {}).get('contributionsCollection', {}).get('contributionCalendar', {}).get('weeks', [])
     for week in weeks:
         for day in week['contributionDays']:
             day_date = datetime.datetime.strptime(day['date'], "%Y-%m-%d")
