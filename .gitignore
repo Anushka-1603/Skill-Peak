@@ -172,3 +172,5 @@ cython_debug/
 
 /inputs
 /outputs
+
+dump.rdb
