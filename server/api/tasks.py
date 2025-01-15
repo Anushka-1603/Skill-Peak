@@ -3,8 +3,8 @@ from .views import UpdateStatsAPIView
 from rest_framework.test import APIRequestFactory
 from datetime import datetime
 from django.core.mail import send_mail
-from .models import UserProfile
-
+from .models import UserProfile, UserHandler, IndividualStats
+from django.conf import settings
 
 @shared_task
 def update_stats():
@@ -35,20 +35,50 @@ def send_weekly_email():
         ).order_by('-contributions')[:3]
         
         subject = "Weekly Top Performers"
-        body = "<h1>Weekly Top Performers</h1>"
-        body += "<h2>GitHub</h2><ol>"
-
-        for user in github_top_coders:
-            body += f"<li>{user.handlerid.username}: {user.contributions} contributions</li>"
+        body = """
+        <html>
+        <body style="font-family: Arial, sans-serif; padding: 20px;">
+            <h1 style="color: #333;">Weekly Top Performers</h1>
+            
+            <div style="margin: 20px 0;">
+                <h2 style="color: #444;">GitHub Top Performers</h2>
+                <ol style="margin-left: 20px;">
+        """
         
-        body += "</ol><h2>LeetCode</h2><ol>"
-        for user in leetcode_top_coders:
-            body += f"<li>{user.handlerid.username}: {user.submissions} submissions</li>"
-        body += "</ol>"
+        for coder in github_top_coders:
+            body += f'<li style="margin: 10px 0;">{coder.handlerid.handlername}: {coder.contributions} contributions</li>'
+        
+        body += """
+                </ol>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <h2 style="color: #444;">LeetCode Top Performers</h2>
+                <ol style="margin-left: 20px;">
+        """
+        
+        for coder in leetcode_top_coders:
+            body += f'<li style="margin: 10px 0;">{coder.handlerid.handlername}: {coder.submissions} submissions</li>'
+        
+        body += """
+                </ol>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_body = f"""Weekly Top Performers\n\nGitHub Top Performers:\n"""
+        for coder in github_top_coders:
+            text_body += f"- {coder.handlerid.handlername}: {coder.contributions} contributions\n"
+        
+        text_body += f"\nLeetCode Top Performers:\n"
+        for coder in leetcode_top_coders:
+            text_body += f"- {coder.handlerid.handlername}: {coder.submissions} submissions\n"
         
         send_mail(
             subject='Weekly Top Coders Report',
-            message=body,
+            message=text_body,
+            html_message=body,
             from_email=settings.EMAIL_HOST_USER,
             recipient_list=[user.email],
             fail_silently=False,
