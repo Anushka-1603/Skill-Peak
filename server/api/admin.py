@@ -1,8 +1,10 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 from .models import UserProfile, UserHandler, IndividualStats
 
-class AdminUserProfile(admin.ModelAdmin):
-    list_display = ['name', 'email', 'created_at']
+class AdminUserProfile(UserAdmin):
+    fieldsets = UserAdmin.fieldsets
+    list_display = ['username', 'first_name', 'last_name', 'email', 'date_joined']
     
 class AdminUserHandler(admin.ModelAdmin):
     list_display = ['handlername', 'handlerid', 'user', 'platform', 'created_at']
