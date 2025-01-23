@@ -4,7 +4,7 @@ from .models import UserProfile, UserHandler, IndividualStats
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
-        fields = '__all__'
+        fields = ['username', 'email', 'password']
 
 class UserHandlerSerializer(serializers.ModelSerializer):
     class Meta:
