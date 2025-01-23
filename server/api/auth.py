@@ -1,4 +1,4 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import UserProfile
@@ -28,11 +28,17 @@ class RegisterView(generics.CreateAPIView):
 
 class LoginView(APIView):
     
+    permission_classes = [AllowAny]
     def post(self, request, *args, **kwargs):
-        email = request.data['email']
+        username = request.data['username']
         password = request.data['password']
         
-        user = UserProfile.objects.get(email=email)
+        try:
+            user = UserProfile.objects.get(username=username)
+        except UserProfile.DoesNotExist:
+            return Response({'error': 'User does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        user = UserProfile.objects.get(username=username)
         
         if user.check_password(password):
             refresh = RefreshToken.for_user(user)
