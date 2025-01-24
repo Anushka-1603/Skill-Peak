@@ -1,6 +1,7 @@
 from celery import shared_task
 from .views import UpdateStatsAPIView
 from rest_framework.test import APIRequestFactory
+from rest_framework.response import Response
 from datetime import datetime
 from django.core.mail import send_mail
 from .models import UserProfile, UserHandler, IndividualStats
@@ -11,11 +12,10 @@ def update_stats():
     # Create a dummy request to pass to the view
     factory = APIRequestFactory()
     request = factory.get('/')
-    
-    view = UpdateStatsAPIView.as_view()
-    response = view(request)
-    
-    return response
+    view = UpdateStatsAPIView()
+    view.request = request
+    view.format_kwarg = None
+    response = view.update_stats(request)
 
 @shared_task
 def send_weekly_email():
