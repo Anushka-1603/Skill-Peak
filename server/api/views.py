@@ -127,7 +127,10 @@ class UpdateStatsAPIView(generics.UpdateAPIView, generics.CreateAPIView):
     serializer_class = IndividualStatsSerializer
     permission_classes = [permissions.IsAdminUser]
     
-    def get(self, request, *args, **kwargs):
+    def get(self, request):
+        return self.update_stats(request)
+
+    def update_stats(self, request=None, *args, **kwargs):
         userHandlers = UserHandler.objects.all()
         
         for userHandler in userHandlers:
@@ -153,8 +156,8 @@ class UpdateStatsAPIView(generics.UpdateAPIView, generics.CreateAPIView):
         leetcode_top_coders = self.get_queryset().filter(handlerid__platform=UserHandler.LEETCODE).order_by('-submissions')[:3]
         github_top_coders = self.get_queryset().filter(handlerid__platform=UserHandler.GITHUB).order_by('-contributions')[:3]
         
-        leetcode_serializer = self.get_serializer(leetcode_top_coders, many=True)
-        github_serializer = self.get_serializer(github_top_coders, many=True)
+        leetcode_serializer = self.get_serializer(leetcode_top_coders, many=True, context={'request': request})
+        github_serializer = self.get_serializer(github_top_coders, many=True, context={'request': request})
         
         return Response(
             {
