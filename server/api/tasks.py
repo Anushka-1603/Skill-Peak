@@ -19,7 +19,7 @@ def update_stats():
 
 @shared_task
 def send_weekly_email():
-    users = UserProfile.objects.all()
+    users = UserProfile.objects.filter(is_staff=False)
     
     for user in users:
         user_handlers = UserHandler.objects.filter(user=user)
