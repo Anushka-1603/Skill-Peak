@@ -8,6 +8,7 @@ from rest_framework.exceptions import NotFound, PermissionDenied
 from .scrapers import scrape_leetcode, scrape_github
 import datetime
 import json
+from rest_framework import status
 
 class UserProfileDetailAPIView(generics.RetrieveAPIView):
     """ Get details of a single user """
@@ -97,28 +98,47 @@ class IndividualStatsRetrieveAPIView(generics.RetrieveAPIView):
     permission_classes = [permissions.IsAuthenticated]
         
     def get(self, request, *args, **kwargs):
-        data = request.data
-        # data = json.loads(request.body)
-        handlerid = data.get('handlerid')
-        days = data.get('days')
-        platform = data.get('platform')        
+        # Get parameters from query string
+        handlerid = request.GET.get('handlerid')
+        days = request.GET.get('days', 7)  # Default to 7 days if not specified
+        platform = request.GET.get('platform')
         
-        # Check if the UserHandler is associated with the logged-in user's UserProfile
+        if not handlerid or not platform:
+            return Response(
+                {'error': 'handlerid and platform are required parameters'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
         try:
-            user_handler = UserHandler.objects.get(handlerid=handlerid, user=request.user)
+            days = int(days)
+        except (TypeError, ValueError):
+            return Response(
+                {'error': 'days must be a valid number'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if the UserHandler exists and is associated with the logged-in user
+        try:
+            user_handler = UserHandler.objects.get(handlerid=handlerid)
+            if user_handler.user != request.user and not request.user.is_staff:
+                raise PermissionDenied("You do not have permission to access this handler's data.")
         except UserHandler.DoesNotExist:
-            raise PermissionDenied("You do not have permission to access this resource.")
+            return Response(
+                {'error': f'No handler found with ID {handlerid}'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
         
         if platform == 'leetcode':
-            submissions = scrape_leetcode(handlerid,days)
-            contributions = 0
-            return Response({'Leetcode submissions':submissions})
+            submissions = scrape_leetcode(handlerid, days)
+            return Response({'Leetcode submissions': submissions})
         elif platform == 'github':
-            contributions = scrape_github(handlerid,days)
-            submissions = 0
-            return Response({'Github contributions':contributions})
+            contributions = scrape_github(handlerid, days)
+            return Response({'Github contributions': contributions})
         else:
-            return Response({'message':'Invalid platform'})
+            return Response(
+                {'error': 'Invalid platform. Must be either leetcode or github'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
             
     
 class UpdateStatsAPIView(generics.UpdateAPIView, generics.CreateAPIView):
