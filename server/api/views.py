@@ -55,7 +55,7 @@ class UserHandlerDetailAPIView(generics.RetrieveAPIView, generics.DestroyAPIView
         data = request.data
         
         try:
-            user_handler = UserHandler.objects.get(handlerid=data['handlerid'], platform=data['platform'])
+            user_handler = UserHandler.objects.get(handlerid=data['handlerid'], platform=data['platform'], user=user)
         except UserHandler.DoesNotExist:
             raise NotFound(f"{str(data['platform'])} handler with id {str(data['handlerid'])} does not exist.")
         
@@ -119,12 +119,17 @@ class IndividualStatsRetrieveAPIView(generics.RetrieveAPIView):
         
         # Check if the UserHandler exists and is associated with the logged-in user
         try:
-            user_handler = UserHandler.objects.get(handlerid=handlerid)
+            # user_handler = UserHandler.objects.get(handlerid=handlerid)
+            user_handler = UserHandler.objects.get(
+                handlerid=handlerid,
+                platform=UserHandler.GITHUB if platform == 'github' else UserHandler.LEETCODE,
+                user=request.user
+            )
             if user_handler.user != request.user and not request.user.is_staff:
                 raise PermissionDenied("You do not have permission to access this handler's data.")
         except UserHandler.DoesNotExist:
             return Response(
-                {'error': f'No handler found with ID {handlerid}'}, 
+                {'error': f'No handler found with ID {handlerid} for your account'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
         
@@ -145,7 +150,9 @@ class UpdateStatsAPIView(generics.UpdateAPIView, generics.CreateAPIView):
     """ Update stats or create new stat associated with a single user handler """
     queryset = IndividualStats.objects.all()
     serializer_class = IndividualStatsSerializer
-    permission_classes = [permissions.IsAdminUser]
+    # permission_classes = [permissions.IsAdminUser]
+    permission_classes = []
+    
     
     def get(self, request):
         return self.update_stats(request)
