@@ -9,6 +9,8 @@ from .scrapers import scrape_leetcode, scrape_github
 import datetime
 import json
 from rest_framework import status
+from django.utils import timezone
+from datetime import timedelta
 
 class UserProfileDetailAPIView(generics.RetrieveAPIView):
     """ Get details of a single user """
@@ -252,6 +254,108 @@ class UserDashboardStatsAPIView(generics.ListAPIView):
             'days_period': days
         }, status=status.HTTP_200_OK)
     
+
+class WeeklyLeaderboardAPIView(generics.ListAPIView):
+    """ Get the latest weekly top performers for LeetCode and GitHub for the authenticated user"""
+    
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = IndividualStatsSerializer
+    
+    def get_queryset(self):
+        user = self.request.user
+        user_handler_ids = UserHandler.objects.filter(user=user).values_list('id', flat=True)
+        return IndividualStats.objects.filter(handlerid__in=user_handler_ids)
+
+
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        
+        # Get all handlers for the current user
+        user_handlers = UserHandler.objects.filter(user=user)
+        if not user_handlers.exists():
+            return Response({
+                'message': 'No handlers added by the user.',
+                'leetcode_top': [],
+                'github_top': [],
+                'last_updated_at': None,
+                'next_update_at': self.get_next_update_timestamp()
+            }, status=status.HTTP_200_OK)
+
+        user_handler_ids = user_handlers.values_list('id', flat=True)
+
+
+        latest_stat_entry = IndividualStats.objects.filter(
+            handlerid__in=user_handler_ids
+        ).order_by('-recorded_at').first()
+
+        if not latest_stat_entry:
+            return Response({
+                'message': 'No weekly stats found for your handlers yet.',
+                'leetcode_top': [],
+                'github_top': [],
+                'last_updated_at': None,
+                'next_update_at': self.get_next_update_timestamp()
+            }, status=status.HTTP_200_OK)
+
+        # Consider stats recorded within a small window (e.g., 1 day) of the latest entry
+        # to ensure we capture all stats from the same batch update.
+        # This helps if tasks for different handlers finish slightly apart.
+        latest_update_time = latest_stat_entry.recorded_at
+        time_threshold = latest_update_time - timedelta(hours=12) # Consider stats updated in the last 12h from latest
+
+        base_query = IndividualStats.objects.filter(
+            handlerid__in=user_handler_ids,
+            recorded_at__gte=time_threshold, # Get stats from the most recent batch
+            recorded_at__lte=latest_update_time + timedelta(minutes=5) # Add a small buffer
+        )
+
+        leetcode_top_coders = base_query.filter(
+            handlerid__platform=UserHandler.LEETCODE
+        ).order_by('-submissions')[:3] # Top 3
+        
+        github_top_coders = base_query.filter(
+            handlerid__platform=UserHandler.GITHUB
+        ).order_by('-contributions')[:3] # Top 3
+        
+        # Serialize the data
+        # The serializer_class is IndividualStatsSerializer, so this will work.
+        # However, it expects a queryset. We have lists of objects.
+        # The context must be passed to the serializer if it relies on `request`.
+        # Your IndividualStatsSerializer is simple so it might not need context.
+        context = {'request': request}
+        leetcode_serializer = self.get_serializer(leetcode_top_coders, many=True, context=context)
+        github_serializer = self.get_serializer(github_top_coders, many=True, context=context)
+        
+        return Response({
+            'leetcode_top': leetcode_serializer.data,
+            'github_top': github_serializer.data,
+            'last_updated_at': latest_update_time,
+            'next_update_at': self.get_next_update_timestamp()
+        }, status=status.HTTP_200_OK)
+
+    def get_next_update_timestamp(self):
+        # Calculate next Saturday midnight (Asia/Calcutta or your CELERY_TIMEZONE)
+        # Your celery.py uses crontab(hour=0, minute=0, day_of_week=6) (Saturday)
+        # TIME_ZONE = 'Asia/Calcutta' in settings.py
+        
+        # This is a simplified calculation. For robust timezone handling,
+        # use pytz or Django's timezone utilities carefully.
+        now = timezone.now() # This is timezone-aware if USE_TZ=True
+        
+        # day_of_week: Monday is 0 and Sunday is 6 for weekday()
+        # crontab: day_of_week=6 means Saturday (0-6, Sunday=0 or 7)
+        # Python's weekday(): Monday is 0, Sunday is 6. Saturday is 5.
+        
+        days_until_saturday = (5 - now.weekday() + 7) % 7
+        
+        next_saturday = now + timedelta(days=days_until_saturday)
+        next_saturday_midnight = next_saturday.replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # If today is Saturday and past midnight, next update is next week's Saturday
+        if next_saturday_midnight < now :
+             next_saturday_midnight += timedelta(days=7)
+        return next_saturday_midnight    
+
 
 class UserHandlersAllAPIView(generics.ListAPIView):
     """ Get all Userhandlers """
