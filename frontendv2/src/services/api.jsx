@@ -382,8 +382,8 @@ const API = {
   },
   
   // Stats endpoints
-  getTopPerformers: () => { // This is the 'update-stats' endpoint
-    return instance.get('userhandlers/update-stats/');
+  getTopPerformers: (days=7) => { // This is the new 'update-stats' endpoint
+    return instance.get(`dashboard-stats/?days=${days}`);
   },
   
   getIndividualStats: (handlerid, platform, days = 7) => {

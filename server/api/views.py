@@ -150,8 +150,7 @@ class UpdateStatsAPIView(generics.UpdateAPIView, generics.CreateAPIView):
     """ Update stats or create new stat associated with a single user handler """
     queryset = IndividualStats.objects.all()
     serializer_class = IndividualStatsSerializer
-    # permission_classes = [permissions.IsAdminUser]
-    permission_classes = []
+    permission_classes = [permissions.IsAdminUser]
     
     
     def get(self, request):
@@ -193,6 +192,67 @@ class UpdateStatsAPIView(generics.UpdateAPIView, generics.CreateAPIView):
             }
         )
         
+class UserDashboardStatsAPIView(generics.ListAPIView):
+    """ Get top 10 user handlers for the authenticated user for a specified number of days. """
+    
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserHandlerSerializer # placeholder, will be replaced
+    
+    def list(self, request, *args, **kwargs):
+        user = request.user
+        try:
+            days = int(request.query_params.get('days', 7))
+            if days <= 0:
+                days = 7
+        except ValueError:
+            days = 7
+        
+        user_handlers = UserHandler.objects.filter(user=user)
+        
+        leetcode_performers = []
+        github_performers = []
+        
+        for handler in user_handlers:
+            try:
+                if handler.platform == UserHandler.LEETCODE:
+                    submissions = scrape_leetcode(handler.handlerid, days)
+                    contributions = 0
+                    leetcode_performers.append({
+                        'id': handler.id,
+                        'handlername': handler.handlername,
+                        'handlerid_platform': handler.handlerid, # actual platform id
+                        'platform': 'LeetCode',
+                        'score': submissions,
+                        'metric_name': 'submissions'
+                    })
+                elif handler.platform == UserHandler.GITHUB:
+                    contributions = scrape_github(handler.handlerid, days)
+                    submissions = 0
+                    if contributions > 0: # Only add if there's activity
+                        github_performers.append({
+                            'id': handler.id,
+                            'handlername': handler.handlername,
+                            'handlerid_platform': handler.handlerid, # actual platform id
+                            'platform': 'GitHub',
+                            'score': contributions,
+                            'metric_name': 'contributions'
+                        })
+            
+            except Exception as e:
+                print(f"Error scraping for {handler.handlername} ({handler.platform}): {e}")
+                continue
+            
+        # Sort by score (submissions/contributions) in descending order
+        leetcode_performers.sort(key=lambda x: x['score'], reverse=True)
+        github_performers.sort(key=lambda x: x['score'], reverse=True)
+
+        return Response({
+            'leetcode': leetcode_performers[:10],
+            'github': github_performers[:10],
+            'days_period': days
+        }, status=status.HTTP_200_OK)
+    
+
 class UserHandlersAllAPIView(generics.ListAPIView):
     """ Get all Userhandlers """
     
