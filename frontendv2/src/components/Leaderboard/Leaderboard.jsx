@@ -1,187 +1,205 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from '../UI/Card';
-import { Alert } from '../UI/Alert';
-import { fetchLeaderboard } from '../../services/api';
+import React, { useEffect, useState, useCallback } from 'react';
+import API from '../../services/api';
+import { FaTrophy, FaGithub, FaCode } from 'react-icons/fa';
 
-const Leaderboard = () => {
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [timeframe, setTimeframe] = useState('week'); // 'day', 'week', 'month', 'all'
+const motivationalQuotes = [
+    "The only way to do great work is to love what you do. - Steve Jobs",
+    "Strive for progress, not perfection.",
+    "The expert in anything was once a beginner.",
+    "Push yourself, because no one else is going to do it for you.",
+    "Your limitation—it's only your imagination.",
+    "Every accomplishment starts with the decision to try.",
+    "So much to do, So little done!",
 
-  useEffect(() => {
-    loadLeaderboard();
-  }, [timeframe]);
+];
 
-  const loadLeaderboard = async () => {
-    setLoading(true);
-    try {
-      const data = await fetchLeaderboard(timeframe);
-      setLeaderboard(data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching leaderboard:', err);
-      setError('Failed to load leaderboard data. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
+const PodiumCard = ({ rank, performer, platform }) => {
+    const rankColor = rank === 1 ? 'bg-yellow-400' : rank === 2 ? 'bg-gray-300' : 'bg-yellow-600';
+    const rankText = rank === 1 ? 'text-yellow-700' : rank === 2 ? 'text-gray-700' : 'text-yellow-800';
+    const PlatformIcon = platform === 'LeetCode' ? FaCode : FaGithub;
+    const metricName = platform === 'LeetCode' ? 'submissions' : 'contributions';
 
-  const getPositionClass = (position) => {
-    switch (position) {
-      case 1:
-        return 'bg-yellow-100 border-yellow-500';
-      case 2:
-        return 'bg-gray-100 border-gray-400';
-      case 3:
-        return 'bg-amber-100 border-amber-500';
-      default:
-        return 'bg-white';
-    }
-  };
-
-  const getPositionEmoji = (position) => {
-    switch (position) {
-      case 1:
-        return '🥇';
-      case 2:
-        return '🥈';
-      case 3:
-        return '🥉';
-      default:
-        return '';
-    }
-  };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Leaderboard</h1>
-        <div className="inline-flex rounded-md">
-          <button
-            onClick={() => setTimeframe('day')}
-            className={`px-4 py-2 text-sm font-medium rounded-l-md ${
-              timeframe === 'day' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            } border border-gray-300`}
-          >
-            Today
-          </button>
-          <button
-            onClick={() => setTimeframe('week')}
-            className={`px-4 py-2 text-sm font-medium ${
-              timeframe === 'week' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            } border-t border-b border-gray-300`}
-          >
-            Week
-          </button>
-          <button
-            onClick={() => setTimeframe('month')}
-            className={`px-4 py-2 text-sm font-medium ${
-              timeframe === 'month' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            } border-t border-b border-gray-300`}
-          >
-            Month
-          </button>
-          <button
-            onClick={() => setTimeframe('all')}
-            className={`px-4 py-2 text-sm font-medium rounded-r-md ${
-              timeframe === 'all' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-white text-gray-700 hover:bg-gray-50'
-            } border border-gray-300`}
-          >
-            All Time
-          </button>
-        </div>
-      </div>
-
-      {error && <Alert type="error" message={error} />}
-
-      <Card>
-        {loading ? (
-          <div className="flex justify-center items-center p-8">
-            <div className="spinner-border text-primary" role="status">
-              <span className="sr-only">Loading...</span>
+    if (!performer || !performer.handlerid) { // Check if performer and handlerid exist
+        return (
+            <div className={`flex flex-col items-center p-4 rounded-lg shadow-md ${rankColor} ${rankText} h-48 justify-center`}>
+                <p className="text-lg font-semibold">Position #{rank}</p>
+                <p className="text-sm">Not filled</p>
             </div>
-          </div>
-        ) : leaderboard.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-gray-500">No leaderboard data available for this time period.</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rank
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Success Rate
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Calls
-                  </th>
-                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Handlers
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {leaderboard.map((entry, index) => (
-                  <tr 
-                    key={entry.userId} 
-                    className={`${getPositionClass(index + 1)} ${index < 3 ? 'border-l-4' : ''}`}
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {index + 1} {getPositionEmoji(index + 1)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                          {entry.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{entry.name}</div>
-                          {entry.company && (
-                            <div className="text-sm text-gray-500">{entry.company}</div>
-                          )}
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{entry.successRate}%</div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-green-600 rounded-full h-2" 
-                          style={{ width: `${entry.successRate}%` }}
-                        ></div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {entry.totalCalls.toLocaleString()}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {entry.handlersCount}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </Card>
-    </div>
-  );
+        );
+    }
+    
+    // Ensure handlerid is an object and has handlername
+    const handlerName = performer.handlerid.handlername || 'Unknown';
+    const score = platform === 'LeetCode' ? performer.submissions : performer.contributions;
+
+
+    return (
+        <div className={`flex flex-col items-center p-4 rounded-lg shadow-md ${rankColor} ${rankText} min-h-[12rem] justify-between`}>
+            <div className="text-center">
+                <FaTrophy className={`mx-auto mb-2 ${rank === 1 ? 'text-5xl' : 'text-4xl'}`} />
+                <p className="text-lg font-bold">#{rank}</p>
+                <p className="text-md font-semibold truncate w-36" title={handlerName}>{handlerName}</p>
+                <p className="text-xs">({performer.handlerid.handlerid})</p>
+            </div>
+            <div className="mt-2 text-center bg-white bg-opacity-30 px-2 py-1 rounded">
+                <p className="text-xl font-bold">{score}</p>
+                <p className="text-xs">{metricName}</p>
+            </div>
+        </div>
+    );
 };
 
-export default Leaderboard;
+
+const CountdownTimer = ({ targetDate }) => {
+    const calculateTimeLeft = useCallback(() => {
+        const difference = +new Date(targetDate) - +new Date();
+        let timeLeft = {};
+
+        if (difference > 0) {
+            timeLeft = {
+                days: Math.floor(difference / (1000 * 60 * 60 * 24)),
+                hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
+                minutes: Math.floor((difference / 1000 / 60) % 60),
+                seconds: Math.floor((difference / 1000) % 60),
+            };
+        }
+        return timeLeft;
+    }, [targetDate]);
+
+    const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+
+    useEffect(() => {
+        if (!targetDate) return;
+        const timer = setTimeout(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+        return () => clearTimeout(timer);
+    });
+
+    if (!targetDate || !timeLeft.days === undefined) {
+        return <p className="text-center text-gray-600">Calculating time to next update...</p>;
+    }
+    
+    const timerComponents = [];
+    Object.keys(timeLeft).forEach((interval) => {
+        if (!timeLeft[interval] && timeLeft[interval] !==0 ) { // Handle cases where timeLeft is initially empty
+            return;
+        }
+        timerComponents.push(
+            <span key={interval} className="text-center mx-1 p-2 bg-gray-700 text-white rounded-md min-w-[3rem]">
+                <strong className="block text-2xl">{String(timeLeft[interval]).padStart(2, '0')}</strong>
+                <span className="text-xs">{interval}</span>
+            </span>
+        );
+    });
+    
+    return timerComponents.length ? 
+        <div className="flex justify-center my-4">{timerComponents}</div> : 
+        <p className="text-center text-lg text-green-500 font-semibold">Updating stats now or very soon!</p>;
+};
+
+
+const WeeklyLeaderboard = () => {
+    const [leaderboardData, setLeaderboardData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [quote, setQuote] = useState('');
+
+    useEffect(() => {
+        setQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
+        
+        const fetchData = async () => {
+            setLoading(true);
+            setError('');
+            try {
+                const response = await API.getWeeklyLeaderboard();
+                setLeaderboardData(response.data);
+            } catch (err) {
+                console.error("Failed to load weekly leaderboard:", err);
+                setError('Failed to load the weekly report. Please try again later.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    if (loading) {
+        return (
+            <div className="text-center p-10">
+                <div role="status" className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-500 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]" />
+                <p className="mt-4 font-semibold text-gray-600">Loading Weekly Report...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="m-4 bg-red-100 border-l-4 border-red-500 text-red-700 p-4" role="alert">
+                <p className="font-bold">Error</p>
+                <p>{error}</p>
+            </div>
+        );
+    }
+    
+    const lastUpdatedDate = leaderboardData?.last_updated_at ? 
+                            new Date(leaderboardData.last_updated_at).toLocaleString() : 
+                            'Not yet updated';
+
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <header className="text-center mb-10">
+                <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-pink-600 mb-3">
+                    Weekly Prowess Report
+                </h1>
+                <p className="text-lg text-gray-600">When you dare to see this, you dare to improve!</p>
+                <p className="text-sm text-gray-500 mt-1">Last Updated: {lastUpdatedDate}</p>
+            </header>
+
+            {leaderboardData?.next_update_at && (
+                <div className="my-8 p-6 bg-gray-800 text-white rounded-xl shadow-2xl">
+                    <h3 className="text-2xl font-semibold text-center mb-3 text-yellow-400">Stats Update Again In:</h3>
+                    <CountdownTimer targetDate={leaderboardData.next_update_at} />
+                </div>
+            )}
+
+            {/* LeetCode Podium */}
+            <section className="mb-12">
+                <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center justify-center">
+                    <FaCode className="mr-3 text-yellow-500" /> LeetCode Grinders 👩🏻‍💻
+                </h2>
+                {leaderboardData?.leetcode_top && leaderboardData.leetcode_top.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <PodiumCard rank={2} performer={leaderboardData.leetcode_top[1]} platform="LeetCode" />
+                        <PodiumCard rank={1} performer={leaderboardData.leetcode_top[0]} platform="LeetCode" />
+                        <PodiumCard rank={3} performer={leaderboardData.leetcode_top[2]} platform="LeetCode" />
+                    </div>
+                ) : (
+                    <p className="text-center text-gray-500 bg-white p-6 rounded-lg shadow">No LeetCode top performers this week, or no LeetCode handlers added.</p>
+                )}
+            </section>
+
+            {/* GitHub Podium */}
+            <section className="mb-12">
+                <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center justify-center">
+                    <FaGithub className="mr-3 text-gray-700" /> GitHub Bugsters 🐛 
+                </h2>
+                 {leaderboardData?.github_top && leaderboardData.github_top.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <PodiumCard rank={2} performer={leaderboardData.github_top[1]} platform="GitHub" />
+                        <PodiumCard rank={1} performer={leaderboardData.github_top[0]} platform="GitHub" />
+                        <PodiumCard rank={3} performer={leaderboardData.github_top[2]} platform="GitHub" />
+                    </div>
+                ) : (
+                     <p className="text-center text-gray-500 bg-white p-6 rounded-lg shadow">No GitHub top performers this week, or no GitHub handlers added.</p>
+                )}
+            </section>
+            
+            <footer className="text-center mt-12 py-6 border-t border-gray-200">
+                <p className="text-md italic text-gray-600">"{quote}"</p>
+            </footer>
+        </div>
+    );
+};
+
+export default WeeklyLeaderboard;

@@ -129,7 +129,7 @@ const Dashboard = () => {
           {leetcodeChartData ? (
             <PerformanceBarChart 
               chartData={leetcodeChartData} 
-              title={`Top LeetCode Grinders 👨🏻‍💻 (Last ${dashboardData.days_period} days)`}
+              title={`Top LeetCode Grinders 👩🏻‍💻 (Last ${dashboardData.days_period} days)`}
               yAxisLabel="Submissions"
             />
           ) : (

@@ -385,6 +385,10 @@ const API = {
   getTopPerformers: (days=7) => { // This is the new 'update-stats' endpoint
     return instance.get(`dashboard-stats/?days=${days}`);
   },
+
+  getWeeklyLeaderboard: () => {
+    return instance.get('weekly-leaderboard/');
+  },
   
   getIndividualStats: (handlerid, platform, days = 7) => {
     return instance.get(`userhandlers/viewhandler/?handlerid=${handlerid}&platform=${platform}&days=${days}`);

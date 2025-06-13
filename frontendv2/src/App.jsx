@@ -7,7 +7,7 @@ import Layout from './components/Layout/Layout';
 import Login from './components/Authentication/Login';
 import Register from './components/Authentication/Register';
 import Dashboard from './components/Dashboard/Dashboard';
-// import Leaderboard from './components/Leaderboard/Leaderboard';
+import Leaderboard from './components/Leaderboard/Leaderboard';
 import Profile from './components/Profile/Profile';
 import HandlerList from './components/Handlers/HandlerList';
 import AddHandler from './components/Handlers/AddHandler';
@@ -45,13 +45,6 @@ function App() {
               </Layout>
             </ProtectedRoute>
           } />
-          {/* <Route path="/leaderboard" element={
-            <ProtectedRoute>
-              <Layout>
-                <Leaderboard />
-              </Layout>
-            </ProtectedRoute>
-          } /> */}
           <Route path="/profile" element={
             <ProtectedRoute>
               <Layout>
@@ -70,6 +63,13 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <AddHandler />
+              </Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/weekly-report" element={ // New Route
+            <ProtectedRoute>
+              <Layout>
+                <Leaderboard />
               </Layout>
             </ProtectedRoute>
           } />
