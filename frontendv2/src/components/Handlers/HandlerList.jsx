@@ -1,96 +1,14 @@
-// import React, { useState, useEffect } from 'react';
-// import HandlerCard from './HandlerCard';
-// import { fetchHandlers } from '../../services/handler.service';
-// import { Button } from '../UI/Button';
-// import { Alert } from '../UI/Alert';
-// import AddHandler from './AddHandler';
-
-// const HandlerList = () => {
-//   const [handlers, setHandlers] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [error, setError] = useState(null);
-//   const [showAddForm, setShowAddForm] = useState(false);
-
-//   const loadHandlers = async () => {
-//     setLoading(true);
-//     try {
-//       const data = await fetchHandlers();
-//       setHandlers(data);
-//       setError(null);
-//     } catch (err) {
-//       console.error('Error fetching handlers:', err);
-//       setError('Failed to load handlers. Please try again later.');
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   useEffect(() => {
-//     loadHandlers();
-//   }, []);
-
-//   const handleAddSuccess = () => {
-//     setShowAddForm(false);
-//     loadHandlers();
-//   };
-
-//   if (loading && handlers.length === 0) {
-//     return (
-//       <div className="flex justify-center items-center h-64">
-//         <div className="spinner-border text-primary" role="status">
-//           <span className="sr-only">Loading...</span>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="space-y-6">
-//       <div className="flex justify-between items-center">
-//         <h2 className="text-2xl font-bold">Your Handlers</h2>
-//         <Button 
-//           variant="primary"
-//           onClick={() => setShowAddForm(!showAddForm)}
-//         >
-//           {showAddForm ? 'Cancel' : 'Add New Handler'}
-//         </Button>
-//       </div>
-
-//       {error && <Alert type="error" message={error} />}
-
-//       {showAddForm && (
-//         <AddHandler onSuccess={handleAddSuccess} onCancel={() => setShowAddForm(false)} />
-//       )}
-
-//       {handlers.length === 0 && !loading ? (
-//         <div className="bg-gray-50 rounded-lg p-6 text-center">
-//           <p className="text-gray-500">You don't have any handlers yet. Create one to get started!</p>
-//         </div>
-//       ) : (
-//         <div className="space-y-4">
-//           {handlers.map(handler => (
-//             <HandlerCard 
-//               key={handler.id} 
-//               handler={handler} 
-//               onUpdate={loadHandlers} 
-//             />
-//           ))}
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default HandlerList;
-// src/components/Handlers/HandlerList.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import API from '../../services/api';
 import HandlerCard from './HandlerCard';
 import { Link } from 'react-router-dom';
-import StatsModal from './StatsModal'; // Import the modal
+import StatsModal from './StatsModal';
+import { FaGithub, FaCode } from 'react-icons/fa'; 
 
 const HandlerList = () => {
   const [handlers, setHandlers] = useState([]);
+  const [leetcodeHandlers, setLeetcodeHandlers] = useState([]);
+  const [githubHandlers, setGithubHandlers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedHandlerForStats, setSelectedHandlerForStats] = useState(null);
@@ -101,7 +19,14 @@ const HandlerList = () => {
     setError('');
     try {
       const response = await API.getUserHandlers();
-      setHandlers(response.data);
+      const fetchHandlers = response.data || [];
+
+      setHandlers(fetchHandlers)
+
+      // seperate handlers by platform
+      setLeetcodeHandlers(fetchHandlers.filter(h => h.platform === 'LC'));
+      setGithubHandlers(fetchHandlers.filter(h => h.platform === 'GH'));
+
     } catch (err) {
       console.error("Failed to load handlers:", err);
       setError('Failed to load your handlers. Please try again.');
@@ -115,7 +40,10 @@ const HandlerList = () => {
   }, [fetchHandlers]);
 
   const handleHandlerDeleted = (deletedHandlerDbId) => {
-    setHandlers(prevHandlers => prevHandlers.filter(h => h.id !== deletedHandlerDbId));
+    const updatedHandlers = handlers.filter(h => h.id !== deletedHandlerDbId);
+    setHandlers(updatedHandlers);
+    setLeetcodeHandlers(updatedHandlers.filter(h => h.platform === 'LC'));
+    setGithubHandlers(updatedHandlers.filter(h => h.platform === 'GH'));
   };
 
   const handleViewStats = (handler) => {
@@ -126,6 +54,31 @@ const HandlerList = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedHandlerForStats(null);
+  };
+
+  // This function now just renders the list of cards for a given platform
+  // The section titles will be outside the two-column layout for each platform.
+  const renderHandlerCards = (handlersForPlatform) => {
+    if (handlersForPlatform.length === 0) {
+      return (
+        <div className="bg-white p-6 rounded-lg shadow text-center text-gray-500 h-full flex items-center justify-center">
+          {/* Adjusted message for context within a column */}
+          <p>No handlers added for this platform yet.</p>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-4">
+        {handlersForPlatform.map(handler => (
+          <HandlerCard 
+            key={handler.id} 
+            handler={handler} 
+            onDeleted={handleHandlerDeleted}
+            onViewStats={handleViewStats}
+          />
+        ))}
+      </div>
+    );
   };
 
   if (loading) {
@@ -165,15 +118,24 @@ const HandlerList = () => {
           </Link>
         </div>
       ) : (
-        <div className="space-y-4">
-          {handlers.map(handler => (
-            <HandlerCard 
-              key={handler.id} 
-              handler={handler} 
-              onDeleted={handleHandlerDeleted}
-              onViewStats={handleViewStats}
-            />
-          ))}
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+          {/* Left Column: LeetCode Handlers */}
+          <div className="lg:w-1/2">
+            <h2 className="text-2xl font-bold text-gray-700 mb-5 flex items-center">
+              <FaCode className="text-yellow-500 text-3xl" />
+              <span className="ml-3">LeetCode Handlers</span>
+            </h2>
+            {renderHandlerCards(leetcodeHandlers)}
+          </div>
+
+          {/* Right Column: GitHub Handlers */}
+          <div className="lg:w-1/2">
+            <h2 className="text-2xl font-bold text-gray-700 mb-5 flex items-center">
+              <FaGithub className="text-gray-700 text-3xl" />
+              <span className="ml-3">GitHub Handlers</span>
+            </h2>
+            {renderHandlerCards(githubHandlers)}
+          </div>
         </div>
       )}
       

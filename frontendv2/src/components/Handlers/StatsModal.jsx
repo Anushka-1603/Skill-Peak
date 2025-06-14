@@ -1,4 +1,3 @@
-// src/components/Handlers/StatsModal.jsx
 import React, { useState, useEffect, useCallback } from 'react';
 import API from '../../services/api';
 
@@ -42,6 +41,12 @@ const StatsModal = ({ handler, isOpen, onClose }) => {
   const platformName = handler.platform === 'LC' ? 'LeetCode' : 
                        handler.platform === 'GH' ? 'GitHub' : 'Unknown';
 
+  const handleDaysChange = (event) => {
+  const newDays = parseInt(event.target.value, 10);
+  if (!isNaN(newDays) && newDays > 0) {
+    setDays(newDays);
+  }};
+
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-75 overflow-y-auto h-full w-full flex justify-center items-center z-50 p-4">
       <div className="relative bg-white p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-md mx-auto">
@@ -60,18 +65,15 @@ const StatsModal = ({ handler, isOpen, onClose }) => {
           <label htmlFor="days" className="block text-sm font-medium text-gray-700 mb-1">
             Show stats for the last:
           </label>
-          <select 
-            id="days" 
-            name="days"
-            value={days} 
-            onChange={(e) => setDays(Number(e.target.value))}
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm"
-          >
-            <option value="7">7 days</option>
-            <option value="30">30 days</option>
-            <option value="90">90 days</option>
-            <option value="365">365 days (may take longer)</option>
-          </select>
+           <input 
+                type="number" 
+                id="days-filter"
+                value={days}
+                onChange={handleDaysChange}
+                min="1"
+                className="w-20 border border-gray-300 text-sm rounded-lg p-2.5 focus:ring-blue-500 focus:border-blue-500"
+            />
+            <span className="text-sm text-gray-700">days</span>
         </div>
 
         {loading && <p className="text-blue-600 my-4 text-center">Loading stats...</p>}
