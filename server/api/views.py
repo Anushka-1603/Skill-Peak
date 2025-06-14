@@ -89,9 +89,17 @@ class UserHandlerListCreateAPIView(generics.ListCreateAPIView):
         data['user'] = user.id
         serializer = self.get_serializer(data=data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors)
+            try:
+                serializer.save()
+                return Response(serializer.data)
+            except Exception as e:
+                if 'unique_user_platform_handlerid' in str(e) or 'UNIQUE constraint failed' in str(e):
+                    return Response(
+                        {"detail": f"This handler ({data.get('platform')}: {data.get('handlerid')}) already exists for your account."},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                return Response({"detail": "A database integrity error occurred."}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 class IndividualStatsRetrieveAPIView(generics.RetrieveAPIView):
     """ Get stats associated with a single user handler for any given number of days"""
@@ -119,9 +127,7 @@ class IndividualStatsRetrieveAPIView(generics.RetrieveAPIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if the UserHandler exists and is associated with the logged-in user
         try:
-            # user_handler = UserHandler.objects.get(handlerid=handlerid)
             user_handler = UserHandler.objects.get(
                 handlerid=handlerid,
                 platform=UserHandler.GITHUB if platform == 'github' else UserHandler.LEETCODE,

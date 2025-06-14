@@ -20,6 +20,13 @@ class UserHandler(models.Model):
     platform = models.CharField(max_length=2, choices=PLATFORMS)
     created_at = models.DateTimeField(auto_now_add=True)
     
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+            fields=['user', 'platform', 'handlerid'],
+            name='unique_user_platform_handlerid')
+        ]
+    
     def __str__(self):
         return f"{self.handlername} - {self.get_platform_display()}"
     
